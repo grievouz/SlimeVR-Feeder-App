@@ -170,10 +170,10 @@ class UniverseTranslation {
 				if (iii > 2) {
 					break; // TODO: 4 components in a translation vector? should this be an error?
 				}
-				res.translation.v[iii] = component.get_double();
+				res.translation.v[iii] = static_cast<float>(component.get_double());
 				iii += 1;
 			}
-			res.yaw = obj["yaw"].get_double();
+			res.yaw = static_cast<float>(obj["yaw"].get_double());
 
 			return res;
 		}
@@ -369,13 +369,13 @@ private:
 			// send our position message
 			messages::ProtobufMessage message;
 			messages::Position *position = message.mutable_position();
-			position->set_x(new_position.v[0]);
-			position->set_y(new_position.v[1]);
-			position->set_z(new_position.v[2]);
-			position->set_qw(new_rotation.w);
-			position->set_qx(new_rotation.x);
-			position->set_qy(new_rotation.y);
-			position->set_qz(new_rotation.z);
+			position->set_x(static_cast<float>(new_position.v[0]));
+			position->set_y(static_cast<float>(new_position.v[1]));
+			position->set_z(static_cast<float>(new_position.v[2]));
+			position->set_qw(static_cast<float>(new_rotation.w));
+			position->set_qx(static_cast<float>(new_rotation.x));
+			position->set_qy(static_cast<float>(new_rotation.y));
+			position->set_qz(static_cast<float>(new_rotation.z));
 			position->set_tracker_id(index);
 			position->set_data_source(
 				pose.eTrackingResult == ETrackingResult::TrackingResult_Fallback_RotationOnly
@@ -485,7 +485,7 @@ public:
 			fmt::print("number of trackers: {}\n", all_trackers_size);
 		}
 
-		for (auto iii = 0; iii < all_trackers_size; ++iii) {
+		for (unsigned int iii = 0; iii < all_trackers_size; ++iii) {
 			auto index = all_trackers[iii];
 			auto driver = this->GetStringProp(index, ETrackedDeviceProperty::Prop_TrackingSystemName_String);
 			auto info = tracker_info + index;
@@ -557,7 +557,7 @@ public:
 			}
 		}
 
-		for (auto iii = 0; iii < k_unMaxTrackedDeviceCount; ++iii) {
+		for (unsigned int iii = 0; iii < k_unMaxTrackedDeviceCount; ++iii) {
 			auto info = tracker_info + iii;
 
 			if (info->state == TrackerState::DISCONNECTED) {
@@ -789,14 +789,14 @@ int main(int argc, char* argv[]) {
 	try {
 		parser.Prog(argv[0]);
 		parser.ParseArgs(args);
-	} catch (args::Help) {
+	} catch (const args::Help&) {
 		std::cout << parser;
 		return 0;
-	} catch (args::ParseError e) {
+	} catch (const args::ParseError& e) {
 		std::cerr << e.what() << std::endl;
 		std::cerr << parser;
 		return 1;
-	} catch (args::ValidationError e) {
+	} catch (const args::ValidationError& e) {
 		std::cerr << e.what() << std::endl;
 		std::cerr << parser;
 		return 1;
@@ -809,7 +809,7 @@ int main(int argc, char* argv[]) {
 	fmt::print("SlimeVR-Feeder-App version {}\n\n", version);
 
 	EVRInitError init_error = VRInitError_None;
-	EVRInputError input_error = VRInputError_None;
+	EVRInputError _input_error = VRInputError_None;
 
 	signal(SIGINT, handle_signal);
 
@@ -883,11 +883,11 @@ int main(int argc, char* argv[]) {
 		bridge->getNextMessage(recievedMessage);
 
 		// TODO: are there events we should be listening to in order to fire this?
-		uint64_t universe = VRSystem()->GetUint64TrackedDeviceProperty(0, Prop_CurrentUniverseId_Uint64);
-		if (use_vrchaperone && (!trackers.current_universe.has_value() || trackers.current_universe.value().first != universe)) {
-			auto res = search_universe(json_parser, universe);
+		uint64_t current_universe = VRSystem()->GetUint64TrackedDeviceProperty(0, Prop_CurrentUniverseId_Uint64);
+		if (use_vrchaperone && (!trackers.current_universe.has_value() || trackers.current_universe.value().first != current_universe)) {
+			auto res = search_universe(json_parser, current_universe);
 			if (res.has_value()) {
-				trackers.current_universe.emplace(universe, res.value());
+				trackers.current_universe.emplace(current_universe, res.value());
 			}
 		}
 

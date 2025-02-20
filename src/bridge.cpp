@@ -10,7 +10,7 @@
 
 class NamedPipeBridge final: public SlimeVRBridge {
     private:
-        static constexpr char* pipe_name = "\\\\.\\pipe\\SlimeVRInput";
+        static constexpr const char* pipe_name = "\\\\.\\pipe\\SlimeVRInput";
         HANDLE pipe = INVALID_HANDLE_VALUE;
         // our buffer "size" will probably always be 0, we're just making use of the capacity.
         std::vector<uint8_t> buffer;
@@ -49,7 +49,7 @@ class NamedPipeBridge final: public SlimeVRBridge {
                 return false;
             }
 
-            DWORD size = msg.ByteSizeLong() + 4; // wire size includes 4 bytes for size
+            DWORD size = static_cast<DWORD>(msg.ByteSizeLong() + 4); // wire size includes 4 bytes for size
             buffer.reserve(size);
 
             buffer[0] = size & 0xFF;
